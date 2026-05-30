@@ -12,6 +12,12 @@
       "runtimeExecutable": "uv",
       "runtimeArgs": ["run", "python", "web/dummy_server.py"],
       "port": 8798
+    },
+    {
+      "name": "hub",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "-m", "http.server", "8797"],
+      "port": 8797
     }
   ]
 }

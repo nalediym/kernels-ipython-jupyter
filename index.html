@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>kernels · ipython · jupyter — a playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0b0f14; --bg2:#11171f; --panel:#141c26; --line:#25313f;
+    --fg:#e7eef5; --fg2:#9fb1c1; --fg3:#5f7488;
+    --mono:'JetBrains Mono',ui-monospace,monospace; --sans:'Space Grotesk',system-ui,sans-serif;
+    --unix:#7ee0c2; --ipython:#ffb86b; --jupyter:#8ab4ff; --accent:var(--unix);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 50% -10%,#14202c 0%,var(--bg) 60%) fixed;
+       color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+       padding:clamp(16px,4vw,46px)}
+  .wrap{max-width:880px;margin:0 auto}
+
+  /* links on top */
+  nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:38px}
+  nav a{font-family:var(--mono);font-size:12.5px;color:var(--fg2);text-decoration:none;
+        padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg2);
+        transition:all .2s ease}
+  nav a:hover{color:#0b0f14;background:var(--accent);border-color:var(--accent)}
+
+  header{text-align:center;margin-bottom:40px}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--fg2);margin-bottom:14px}
+  h1{font-size:clamp(26px,5vw,46px);font-weight:700;line-height:1.06;letter-spacing:-.02em}
+  h1 .a{color:var(--unix)} h1 .b{color:var(--ipython)} h1 .c{color:var(--jupyter)}
+  .lede{margin-top:16px;color:var(--fg2);font-size:16px;max-width:60ch;margin-inline:auto;line-height:1.55}
+
+  /* card grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .card{display:block;text-decoration:none;color:inherit;background:var(--panel);
+        border:1px solid var(--line);border-radius:16px;padding:22px;transition:all .22s ease;position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--accent));opacity:.0;transition:opacity .22s}
+  .card:hover{border-color:var(--c,var(--accent));transform:translateY(-2px)}
+  .card:hover::before{opacity:1}
+  .card .ico{font-size:22px;margin-bottom:12px}
+  .card h3{font-size:18px;font-weight:700;margin-bottom:7px}
+  .card p{font-size:13.5px;color:var(--fg2);line-height:1.5}
+  .card .meta{font-family:var(--mono);font-size:11px;color:var(--fg3);margin-top:12px}
+  .card.wide{grid-column:1/-1}
+
+  footer{margin-top:40px;text-align:center}
+  footer pre{display:inline-block;text-align:left;font-family:var(--mono);font-size:12.5px;color:var(--fg2);
+             background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px 20px;line-height:1.7}
+  footer .u{color:var(--unix)} footer .i{color:var(--ipython)} footer .j{color:var(--jupyter)}
+  footer .note{margin-top:18px;font-size:13px;color:var(--fg3)}
+  footer a{color:var(--unix);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a href="./progression.html">progression</a>
+    <a href="./web/notebook.html">live notebook</a>
+    <a href="https://nalediym.github.io/kernels-ipython-jupyter/notebook.html" target="_blank" rel="noopener">executed notebook</a>
+    <a href="https://github.com/nalediym/kernels-ipython-jupyter/tree/main/build" target="_blank" rel="noopener">build it</a>
+    <a href="https://github.com/nalediym/kernels-ipython-jupyter/tree/main/demos" target="_blank" rel="noopener">demos</a>
+    <a href="https://nalediym.github.io/writing/kernels-ipython-jupyter/" target="_blank" rel="noopener">writeup</a>
+    <a href="https://github.com/nalediym/kernels-ipython-jupyter" target="_blank" rel="noopener">repo ↗</a>
+  </nav>
+
+  <header>
+    <div class="kicker">a playground for three conflated words</div>
+    <h1>You touch a <span class="a">shell</span>.<br>A <span class="c">kernel</span> does the real work.</h1>
+    <p class="lede">Kernel, IPython, Jupyter — felt, not just read. Every piece below is a real
+      process you can poke, from raw ZeroMQ frames to a notebook that's dead until you give it a kernel.</p>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="./progression.html" style="--c:var(--unix)">
+      <div class="ico">🧬</div>
+      <h3>The progression</h3>
+      <p>Flip through Unix → IPython → Jupyter. The same <code>shell ⇄ kernel</code> idea, rebuilt three times — watch the two halves pull apart.</p>
+      <div class="meta">interactive · ← / →</div>
+    </a>
+
+    <a class="card" href="./web/notebook.html" style="--c:var(--jupyter)">
+      <div class="ico">🔴→🟢</div>
+      <h3>Build Your Own Jupyter</h3>
+      <p>A notebook that's dead until you give it a kernel. Run it with no backend and it's just HTML; start the kernel and every cell comes alive.</p>
+      <div class="meta">needs: uv run python web/server.py</div>
+    </a>
+
+    <a class="card" href="https://github.com/nalediym/kernels-ipython-jupyter/tree/main/build" target="_blank" rel="noopener" style="--c:var(--unix)">
+      <div class="ico">🌰</div>
+      <h3>Code it from scratch</h3>
+      <p>A day in the life of Thompson, Pérez, and the Jupyter team — assembled as the Builder pattern. <code>director.py</code> runs it; <code>check.py</code> gates it 7/7.</p>
+      <div class="meta">build/ · Builder pattern</div>
+    </a>
+
+    <a class="card" href="https://github.com/nalediym/kernels-ipython-jupyter/blob/main/demos/zmq_sniff.py" target="_blank" rel="noopener" style="--c:var(--ipython)">
+      <div class="ico">🔌</div>
+      <h3>The raw ZeroMQ frames</h3>
+      <p>Boot a real kernel and read its sockets directly — the <code>&lt;IDS|MSG&gt;</code> delimiter, HMAC, header, content. The actual Jupyter wire protocol.</p>
+      <div class="meta">demos/zmq_sniff.py</div>
+    </a>
+
+    <a class="card" href="https://nalediym.github.io/kernels-ipython-jupyter/notebook.html" target="_blank" rel="noopener" style="--c:var(--ipython)">
+      <div class="ico">📓</div>
+      <h3>The executed notebook</h3>
+      <p>The annotated playground, pre-run — persistent state, <code>%magics</code>, <code>!shell</code>, and the which-Python confusion, with real outputs.</p>
+      <div class="meta">static · published</div>
+    </a>
+
+    <a class="card" href="https://nalediym.github.io/writing/kernels-ipython-jupyter/" target="_blank" rel="noopener" style="--c:var(--jupyter)">
+      <div class="ico">✍️</div>
+      <h3>The writeup</h3>
+      <p>The full essay on nalediym.github.io — the layered model and every demo, in prose.</p>
+      <div class="meta">nalediym.github.io</div>
+    </a>
+  </div>
+
+  <footer>
+    <pre><span class="u">Unix:    </span> shell (bash)        ⇄  kernel (Linux)        ← the OG pairing
+<span class="i">IPython: </span> shell (the REPL UI) ⇄  kernel (ipykernel)    ← borrowed the metaphor
+<span class="j">Jupyter: </span> front-end (browser) ⇄  kernel (any language) ← inherited it, 2014</pre>
+    <div class="note">built hands-on · <a href="https://github.com/nalediym/kernels-ipython-jupyter">github.com/nalediym/kernels-ipython-jupyter</a></div>
+  </footer>
+</div>
+</body>
+</html>
