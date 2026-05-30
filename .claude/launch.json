@@ -6,6 +6,12 @@
       "runtimeExecutable": "uv",
       "runtimeArgs": ["run", "python", "web/server.py"],
       "port": 8799
+    },
+    {
+      "name": "kernel-web-dummy",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "web/dummy_server.py"],
+      "port": 8798
     }
   ]
 }
