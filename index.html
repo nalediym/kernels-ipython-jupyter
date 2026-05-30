@@ -15,18 +15,6 @@
   The one idea underneath all of them: <strong>you touch a shell, a kernel does the real work.</strong>
 </p>
 
-<nav>
-  <a href="./progression.html">progression</a> |
-  <a href="./web/notebook.html">live notebook</a> |
-  <a href="https://nalediym.github.io/kernels-ipython-jupyter/notebook.html">executed notebook</a> |
-  <a href="https://github.com/nalediym/kernels-ipython-jupyter/tree/main/build">build it</a> |
-  <a href="https://github.com/nalediym/kernels-ipython-jupyter/tree/main/demos">demos</a> |
-  <a href="https://nalediym.github.io/writing/kernels-ipython-jupyter/">writeup</a> |
-  <a href="https://github.com/nalediym/kernels-ipython-jupyter">repo</a>
-</nav>
-
-<hr />
-
 <h2>The three layers</h2>
 <dl>
   <dt><strong>Kernel</strong></dt>
@@ -37,35 +25,6 @@
   <dd>The front-end that talks to a kernel over ZeroMQ.</dd>
 </dl>
 
-<h2>The pieces</h2>
-<ul>
-  <li>
-    <a href="./progression.html">The progression</a> —
-    flip through Unix &rarr; IPython &rarr; Jupyter: the same shell/kernel idea, rebuilt three times.
-  </li>
-  <li>
-    <a href="./web/notebook.html">Build Your Own Jupyter</a> —
-    a notebook that's dead until you give it a kernel. Run it with no backend and it's just HTML;
-    start the kernel (<code>uv run python web/server.py</code>) and every cell comes alive.
-  </li>
-  <li>
-    <a href="https://github.com/nalediym/kernels-ipython-jupyter/tree/main/build">Code it from scratch</a> —
-    a day in the life of Thompson, Pérez, and the Jupyter team, assembled as the Builder pattern.
-  </li>
-  <li>
-    <a href="https://github.com/nalediym/kernels-ipython-jupyter/blob/main/demos/zmq_sniff.py">The raw ZeroMQ frames</a> —
-    boot a real kernel and read its sockets directly: the &lt;IDS|MSG&gt; delimiter, HMAC, header, content.
-  </li>
-  <li>
-    <a href="https://nalediym.github.io/kernels-ipython-jupyter/notebook.html">The executed notebook</a> —
-    the annotated playground, pre-run, with real outputs.
-  </li>
-  <li>
-    <a href="https://nalediym.github.io/writing/kernels-ipython-jupyter/">The writeup</a> —
-    the full essay on nalediym.github.io.
-  </li>
-</ul>
-
 <h2>The lineage</h2>
 <pre>
 Unix:     shell (bash)        &harr;  kernel (Linux)        &larr; the OG pairing
@@ -73,11 +32,18 @@ IPython:  shell (the REPL UI) &harr;  kernel (ipykernel)    &larr; borrowed the 
 Jupyter:  front-end (browser) &harr;  kernel (any language) &larr; inherited it, 2014
 </pre>
 
+<h2>What's inside</h2>
+<p>
+  It's built to be felt, not just read: an interactive progression from Unix to IPython to
+  Jupyter, a from-scratch track that rebuilds the stack the way history did, a sniffer that
+  prints the raw ZeroMQ frames between a kernel and its client, and a notebook that's dead
+  until you give it a kernel. All of it runs.
+</p>
+
 <hr />
 
 <p>
-  <small>built hands-on &middot;
-  <a href="https://github.com/nalediym/kernels-ipython-jupyter">github.com/nalediym/kernels-ipython-jupyter</a></small>
+  <a href="https://github.com/nalediym/kernels-ipython-jupyter">github.com/nalediym/kernels-ipython-jupyter</a>
 </p>
 
 </body>
