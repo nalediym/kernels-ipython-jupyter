@@ -1,0 +1,15 @@
+[project]
+name = "kernels-ipython-jupyter"
+version = "0.1.0"
+description = "A hands-on playground for the kernel / IPython / Jupyter distinction: raw ZeroMQ frame sniffing, a custom %magic, a Python↔Bash kernel swap, a from-scratch Builder track, and a notebook that's dead until you give it a kernel."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipython",
+    "jupyterlab",
+    "bash_kernel",
+]
+
+# This is an application, not a library — don't try to build/install it as a package.
+[tool.uv]
+package = false

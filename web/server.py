@@ -11,7 +11,7 @@ The browser ⇄ HTTP ⇄ this server IS the shell⇄kernel split, one more time:
     we send JSON over HTTP — same idea, simpler wire),
   - this process is the KERNEL (holds the namespace, runs the code).
 
-Run:  python web/server.py    →  then open  http://localhost:8799
+Run:  uv run python web/server.py    →  then open  http://localhost:8799
 """
 import io
 import os

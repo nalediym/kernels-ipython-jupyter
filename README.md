@@ -44,8 +44,8 @@ Day 3 · Jupyter team   · Jupyter 2014  build_protocol()    → signed JSON mes
 ```
 
 ```bash
-.venv/bin/python build/director.py   # the makers assemble the stack, in character
-.venv/bin/python build/check.py      # green-check gate — 7 layers must pass
+uv run python build/director.py   # the makers assemble the stack, in character
+uv run python build/check.py      # green-check gate — 7 layers must pass
 ```
 
 It runs out of the box; blank out any `build_*` step and reimplement it until
@@ -55,17 +55,19 @@ It runs out of the box; blank out any `build_*` step and reimplement it until
 
 ## Setup
 
-Homebrew Python 3.14, no IPython/Jupyter system-wide — everything lives in a venv.
+Managed with [**uv**](https://docs.astral.sh/uv/). No IPython/Jupyter system-wide —
+`pyproject.toml` + `uv.lock` pin everything (ipython, jupyterlab, bash_kernel).
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt   # ipython, jupyterlab, bash_kernel, …
+uv sync                                   # build the env from the lockfile
+uv run python -m bash_kernel.install --sys-prefix   # register the Bash kernel (once)
 ```
 
+`uv run <cmd>` runs anything inside the project env — no activating, no `uv run …`.
 Launch the real thing whenever you want to click around:
 
 ```bash
-.venv/bin/jupyter lab          # opens JupyterLab in your browser
+uv run jupyter lab          # opens JupyterLab in your browser
 ```
 
 ---
@@ -119,8 +121,8 @@ on the published page). It walks through, with real outputs:
 Rebuild + re-execute it any time:
 
 ```bash
-.venv/bin/python notebooks/build_notebook.py
-.venv/bin/jupyter nbconvert --to notebook --execute --inplace notebooks/playground.ipynb
+uv run python notebooks/build_notebook.py
+uv run jupyter nbconvert --to notebook --execute --inplace notebooks/playground.ipynb
 ```
 
 ---
@@ -132,7 +134,7 @@ kernel, attaches its **own** zmq sockets to the kernel's Shell + IOPub ports, an
 prints the multipart frames byte-for-byte as you run `x = 6 * 7; print(...); x`.
 
 ```bash
-.venv/bin/python demos/zmq_sniff.py
+uv run python demos/zmq_sniff.py
 ```
 
 You watch one `execute_request` turn into the full reply lifecycle:
@@ -168,7 +170,7 @@ is *exactly* what JupyterLab exchanges with the kernel on every Shift+Enter.
 a cell magic. Magics aren't built into Python — they're just registered functions:
 
 ```bash
-.venv/bin/python demos/run_magic_demo.py
+uv run python demos/run_magic_demo.py
 ```
 ```
 >>> %clap kernels hold state
@@ -189,10 +191,10 @@ what a kernel does with each cell. No notebook required to prove the magic is re
 only the `kernel_name`. Install the bash kernel once:
 
 ```bash
-.venv/bin/python -m bash_kernel.install --sys-prefix
+uv run python -m bash_kernel.install --sys-prefix
 ```
 ```bash
-.venv/bin/python demos/swap_kernels.py
+uv run python demos/swap_kernels.py
 ```
 ```
 ===== kernel = 'python3' =====
@@ -207,7 +209,7 @@ back-end — Python, Bash, R, Julia, Deno. Swap the kernel, keep the notebook.
 List what's installed:
 
 ```bash
-.venv/bin/jupyter kernelspec list
+uv run jupyter kernelspec list
 ```
 
 ---
@@ -238,7 +240,9 @@ demos/
 notebooks/
   build_notebook.py       # constructs playground.ipynb with nbformat
   playground.ipynb        # the annotated, pre-executed teaching notebook
-requirements.txt          # pinned: ipython, jupyterlab, ipykernel, pyzmq, bash_kernel, …
+pyproject.toml            # deps: ipython, jupyterlab, bash_kernel  (managed by uv)
+uv.lock                   # the full pinned, hashed lockfile (97 packages)
+requirements.txt          # pip-compatible export of the lock, for non-uv users
 ```
 
 Related learning repos: [`learn-virtual-envs`](../learn-virtual-envs) (the `source`/which-python

@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "kernel-web",
-      "runtimeExecutable": ".venv/bin/python",
-      "runtimeArgs": ["web/server.py"],
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "web/server.py"],
       "port": 8799
     }
   ]

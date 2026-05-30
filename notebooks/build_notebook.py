@@ -3,8 +3,8 @@
 We build it with nbformat (no hand-edited JSON), then it gets executed by
 nbconvert so the committed .ipynb carries REAL outputs. Re-run any time:
 
-    python notebooks/build_notebook.py
-    jupyter nbconvert --to notebook --execute --inplace notebooks/playground.ipynb
+    uv run python notebooks/build_notebook.py
+    uv run jupyter nbconvert --to notebook --execute --inplace notebooks/playground.ipynb
 """
 import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell

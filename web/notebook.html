@@ -82,7 +82,7 @@
     <div class="kicker">build your own jupyter · the front-end never runs your code</div>
     <h1>A notebook that's dead until you give it a kernel.</h1>
     <p class="lede">This page is <b>just HTML</b>. Hit Run now and nothing happens — it can't execute Python.
-      Then start the kernel (<code>python web/server.py</code>) and watch every cell come alive. The kernel
+      Then start the kernel (<code>uv run python web/server.py</code>) and watch every cell come alive. The kernel
       is the <code>StackBuilder</code> you wrote in <code>build/</code>. <b>You built the thing that brings this to life.</b></p>
   </header>
 
@@ -92,7 +92,7 @@
       <div class="head" id="st-head">🔴 No kernel connected</div>
       <div class="sub" id="st-sub">the front-end is alone — it can serialize your code, but it can't run it</div>
     </div>
-    <div class="hint" id="st-hint">start: <code>python web/server.py</code></div>
+    <div class="hint" id="st-hint">start: <code>uv run python web/server.py</code></div>
   </div>
 
   <div class="toolbar">
@@ -224,7 +224,7 @@ function flip(up, info) {
   document.getElementById("st-sub").textContent = up
     ? `engine: ${info.engine} · Python ${info.python} — now the cells can actually run`
     : "the front-end is alone — it can serialize your code, but it can't run it";
-  document.getElementById("st-hint").innerHTML = up ? "hit ▶ Run all" : "start: <code>python web/server.py</code>";
+  document.getElementById("st-hint").innerHTML = up ? "hit ▶ Run all" : "start: <code>uv run python web/server.py</code>";
 }
 
 document.getElementById("runall").onclick = async () => {

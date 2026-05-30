@@ -18,8 +18,8 @@ Each `build_*()` adds one capability to the same `StackBuilder` and returns
 ## Run it
 
 ```bash
-.venv/bin/python build/director.py   # watch the makers assemble the stack, in character
-.venv/bin/python build/check.py      # the green-check gate — 7 layers must pass
+uv run python build/director.py   # watch the makers assemble the stack, in character
+uv run python build/check.py      # the green-check gate — 7 layers must pass
 ```
 
 `director.py` is the Director: it knows the *sequence*, never the details.
