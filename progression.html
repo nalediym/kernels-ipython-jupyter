@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>shell ⇄ kernel — Unix → IPython → Jupyter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0b0f14;
+    --bg2: #11171f;
+    --panel: #141c26;
+    --line: #25313f;
+    --fg: #e7eef5;
+    --fg2: #9fb1c1;
+    --fg3: #5f7488;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Space Grotesk', system-ui, sans-serif;
+    --unix:    #7ee0c2;
+    --ipython: #ffb86b;
+    --jupyter: #8ab4ff;
+    --accent: var(--unix);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #14202c 0%, var(--bg) 60%) fixed;
+    color: var(--fg);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding: clamp(18px, 4vw, 48px);
+    transition: background .6s ease;
+  }
+  .wrap { width: 100%; max-width: 980px; }
+
+  header { text-align: center; margin-bottom: 28px; }
+  .kicker {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .28em;
+    text-transform: uppercase; color: var(--fg2); margin-bottom: 12px;
+  }
+  h1 { font-size: clamp(26px, 5vw, 44px); font-weight: 700; line-height: 1.05; letter-spacing: -.02em; }
+  h1 .arrow { color: var(--accent); transition: color .5s ease; }
+  .thru {
+    margin-top: 14px; font-size: 15px; color: var(--fg2);
+  }
+  .thru b { color: var(--fg); font-weight: 500; }
+
+  /* segmented control */
+  .seg {
+    display: flex; gap: 6px; justify-content: center; margin: 26px 0 8px;
+    background: var(--bg2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px; width: fit-content; margin-inline: auto;
+  }
+  .seg button {
+    font-family: var(--sans); font-size: 14px; font-weight: 500;
+    color: var(--fg2); background: transparent; border: 0; cursor: pointer;
+    padding: 9px 20px; border-radius: 999px; transition: all .25s ease;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .seg button .yr { font-family: var(--mono); font-size: 11px; opacity: .65; }
+  .seg button[aria-selected="true"] { color: #0b0f14; background: var(--accent); font-weight: 700; }
+  .hint { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--fg2); opacity: .6; margin-bottom: 26px; }
+
+  /* the morphing diagram */
+  .diagram {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: 0;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    overflow: hidden; min-height: 168px;
+  }
+  .node { padding: 26px 22px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .node .role { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--fg2); }
+  .node .name { font-size: 19px; font-weight: 700; line-height: 1.2; }
+  .node .sub { font-size: 13px; color: var(--fg2); line-height: 1.35; }
+  .node.frontend .name { color: var(--fg); }
+  .node.kernel { background: linear-gradient(180deg, rgba(255,255,255,.02), transparent); }
+  .node.kernel .name { color: var(--accent); transition: color .5s ease; }
+
+  .link { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 14px; min-width: 188px; position: relative; }
+  .link .wire {
+    width: 100%; height: 2px; background:
+      repeating-linear-gradient(90deg, var(--accent) 0 10px, transparent 10px 18px);
+    opacity: .85; transition: background .5s ease;
+  }
+  .link.same-proc .wire { background: var(--accent); opacity: .5; }
+  .link .label { font-family: var(--mono); font-size: 11px; color: var(--fg2); text-align: center; margin-top: 10px; line-height: 1.4; }
+  .link .dots { position: absolute; top: 50%; left: 0; transform: translateY(-50%); font-size: 13px; color: var(--accent); }
+
+  /* swap animation */
+  .fade { animation: fade .45s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* content cards */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+  @media (max-width: 720px) { .cards { grid-template-columns: 1fr; } .diagram { grid-template-columns: 1fr; } .link { min-width: 0; padding: 18px; } .link .wire { width: 60%; } }
+  .card { background: var(--bg2); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .card h3 { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--fg2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .card h3::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--accent); transition: background .5s ease; }
+  .card p { font-size: 14px; color: var(--fg); line-height: 1.5; }
+  .card.wide { grid-column: 1 / -1; }
+  .card.wire p { font-family: var(--mono); font-size: 12.5px; color: var(--fg2); white-space: pre-wrap; }
+  .card.wire b { color: var(--accent); font-weight: 500; }
+  .happened { font-size: 15px; color: var(--fg); line-height: 1.55; }
+  .happened b { color: var(--accent); transition: color .5s ease; }
+
+  /* timeline rail */
+  .rail { margin-top: 30px; position: relative; height: 50px; }
+  .rail .track { position: absolute; top: 16px; left: 4%; right: 4%; height: 2px; background: var(--line); }
+  .rail .fill { position: absolute; top: 16px; left: 4%; height: 2px; background: var(--accent); transition: width .5s ease, background .5s ease; }
+  .rail .stop { position: absolute; top: 8px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+  .rail .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--line); transition: all .3s ease; }
+  .rail .stop.on .dot { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 4px rgba(255,255,255,.05); }
+  .rail .stop .yr { font-family: var(--mono); font-size: 11px; color: var(--fg2); }
+  .rail .stop.on .yr { color: var(--fg); }
+
+  footer { text-align: center; margin-top: 30px; font-size: 13px; color: var(--fg2); }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">the same idea, rebuilt three times</div>
+    <h1>You touch a <span class="arrow">shell</span>. A <span class="arrow">kernel</span> does the real work.</h1>
+    <p class="thru">Watch the two halves pull apart: <b id="thru">in-process syscalls → a socket between two processes → a browser driving any language.</b></p>
+  </header>
+
+  <div class="seg" role="tablist" id="seg"></div>
+  <div class="hint">use ← / → arrow keys, or click</div>
+
+  <div class="diagram" id="diagram">
+    <div class="node frontend">
+      <span class="role">front-end · the shell</span>
+      <span class="name" id="fe-name"></span>
+      <span class="sub" id="fe-sub"></span>
+    </div>
+    <div class="link" id="link">
+      <div class="wire"></div>
+      <div class="label" id="link-label"></div>
+    </div>
+    <div class="node kernel">
+      <span class="role">executor · the kernel</span>
+      <span class="name" id="k-name"></span>
+      <span class="sub" id="k-sub"></span>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card wide">
+      <h3 id="happened-title">what actually happened</h3>
+      <p class="happened" id="happened"></p>
+    </div>
+    <div class="card">
+      <h3>what stayed the same</h3>
+      <p id="same"></p>
+    </div>
+    <div class="card">
+      <h3>what was new</h3>
+      <p id="new"></p>
+    </div>
+    <div class="card wide wire">
+      <h3>on the wire</h3>
+      <p id="wire"></p>
+    </div>
+  </div>
+
+  <div class="rail" id="rail"></div>
+
+  <footer>
+    part of the <a href="https://github.com/nalediym/kernels-ipython-jupyter">kernels-ipython-jupyter</a> playground —
+    the same <code>shell ⇄ kernel</code> split, three eras deep.
+  </footer>
+</div>
+
+<script>
+const STAGES = [
+  {
+    key: "unix", year: "1971", color: "var(--unix)",
+    feName: "Terminal + bash", feSub: "you type a command; the shell parses it",
+    link: "syscalls", linkSub: "read · write · fork\n(same machine)", sameProc: true,
+    kName: "OS kernel (Unix/Linux)", kSub: "ring 0 — owns CPU, memory, devices",
+    thru: "in-process syscalls — one machine, two privilege levels.",
+    happened: "Unix invents the split. The <b>shell</b> (sh, later bash) is just a program you talk to; it can't touch hardware itself. It asks the <b>kernel</b> — the protected core — to do anything real, via syscalls. Shell = what you touch. Kernel = the core that does the work. Every layer after this borrows the metaphor.",
+    same: "Nothing yet — this IS the origin of the shell⇄kernel idea.",
+    knew: "The naming: the part you touch is the shell; the protected engine is the kernel. A seed (cyrnel) wrapped in a husk.",
+    wire: "$ echo hi\n  shell → kernel:  <b>write(1, \"hi\\n\", 3)</b>   ← a syscall, not a message\n  kernel → shell:  returns 3 bytes written"
+  },
+  {
+    key: "ipython", year: "2011", color: "var(--ipython)",
+    feName: "IPython REPL", feSub: "InteractiveShell — _, Out[], %magics, tab-complete",
+    link: "ZeroMQ · signed JSON", linkSub: "5 sockets between\nTWO processes", sameProc: false,
+    kName: "ipykernel (Python)", kSub: "holds your namespace; runs run_cell()",
+    thru: "a socket between two processes — the executor moves out of the UI.",
+    happened: "IPython borrows Unix's word. Its REPL class is literally <b>InteractiveShell</b>. In 2011 it splits into two processes: the front-end you type into, and a separate <b>ipykernel</b> that holds your variables and runs the code — connected over <b>ZeroMQ</b> with signed JSON messages. Now the UI can crash without killing your session, and many front-ends can attach to one kernel.",
+    same: "The shell⇄kernel pairing, reused on purpose. The executor is still IPython.",
+    knew: "The kernel became a SEPARATE process you reach over a socket. State now lives outside the UI — exactly the frames zmq_sniff.py prints.",
+    wire: "Shift+Enter sends, over a ZeroMQ socket:\n  <b>&lt;IDS|MSG&gt;</b> · HMAC · header{msg_type:\"execute_request\"} · content{code}\n  kernel replies: status:busy → execute_result → status:idle"
+  },
+  {
+    key: "jupyter", year: "2014", color: "var(--jupyter)",
+    feName: "Browser — JupyterLab", feSub: "notebook UI over a web server",
+    link: "ZeroMQ ⇄ web bridge", linkSub: "same messages,\nany language", sameProc: false,
+    kName: "ANY kernel", kSub: "ipykernel · bash · IRkernel · Deno · 100+",
+    thru: "a browser driving any language — the kernel goes polyglot.",
+    happened: "IPython's language-agnostic parts spin out into <b>Project Jupyter</b> (Ju-Pyt-R). The front-end becomes a <b>browser</b>; the protocol stays identical — so the kernel on the other end can be Python, R, Julia, or Bash. Same execute_request, same ZeroMQ envelope. <b>Swap the kernel, keep the notebook.</b> That's the whole architecture, and it's why swap_kernels.py can drive Python and Bash through one client.",
+    same: "Still shell⇄kernel. Still ZeroMQ. The exact same ~18 message types.",
+    knew: "The front-end is a web UI, and the kernel is language-agnostic. One protocol, every language.",
+    wire: "Browser ⇄ Jupyter server ⇄ <b>ZeroMQ</b> ⇄ kernel\n  pick \"Bash\" → same execute_request → bash_kernel runs it\n  pick \"Python 3\" → same execute_request → ipykernel runs it"
+  },
+];
+
+let i = 0;
+const $ = id => document.getElementById(id);
+
+// build segmented control
+const seg = $("seg");
+STAGES.forEach((s, idx) => {
+  const b = document.createElement("button");
+  b.setAttribute("role", "tab");
+  b.innerHTML = `${s.key} <span class="yr">${s.year}</span>`;
+  b.onclick = () => go(idx);
+  seg.appendChild(b);
+});
+
+// build timeline rail
+const rail = $("rail");
+rail.innerHTML = '<div class="track"></div><div class="fill" id="fill"></div>';
+STAGES.forEach((s, idx) => {
+  const left = 4 + (idx / (STAGES.length - 1)) * 92;
+  const stop = document.createElement("div");
+  stop.className = "stop"; stop.style.left = left + "%";
+  stop.innerHTML = `<div class="dot"></div><div class="yr">${s.year}</div>`;
+  stop.onclick = () => go(idx);
+  rail.appendChild(stop);
+});
+
+function go(n) {
+  i = (n + STAGES.length) % STAGES.length;
+  const s = STAGES[i];
+  document.documentElement.style.setProperty("--accent", s.color);
+
+  $("fe-name").textContent = s.feName;
+  $("fe-sub").textContent = s.feSub;
+  $("k-name").textContent = s.kName;
+  $("k-sub").textContent = s.kSub;
+  $("link-label").textContent = s.link;
+  $("thru").textContent = s.thru;
+  $("happened").innerHTML = s.happened;
+  $("same").textContent = s.same;
+  $("new").textContent = s.knew;
+  $("wire").innerHTML = s.wire;
+
+  $("link").className = "link" + (s.sameProc ? " same-proc" : "");
+
+  // re-trigger fade
+  ["diagram", "happened", "wire"].forEach(id => {
+    const el = $(id); el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade");
+  });
+
+  // seg + rail state
+  [...seg.children].forEach((b, idx) => b.setAttribute("aria-selected", idx === i));
+  [...rail.querySelectorAll(".stop")].forEach((st, idx) => st.classList.toggle("on", idx <= i));
+  $("fill").style.width = (i / (STAGES.length - 1)) * 92 + "%";
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") go(i + 1);
+  if (e.key === "ArrowLeft") go(i - 1);
+});
+
+go(0);
+</script>
+</body>
+</html>
