@@ -108,8 +108,8 @@ In [4]: ValueError: expected a nonnegative input, got -1.0
 
 ## 2. The notebook — state lives in the kernel
 
-`notebooks/playground.ipynb` is pre-executed (open it in JupyterLab, or read it
-on the published page). It walks through, with real outputs:
+`notebooks/playground.ipynb` is pre-executed — open it in JupyterLab
+(`uv run jupyter lab`) and run it yourself. It walks through, with real outputs:
 
 - **Which Python is my kernel?** `sys.executable` vs `!which python3` — the venv/`source` confusion.
 - **State persists across cells:** `secret = 6 * 7` in one cell, `secret * 2 → 84` in the next. Same process.
