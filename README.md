@@ -30,6 +30,29 @@ the process on the right and the same UI now drives a different language.
 
 ---
 
+## Or build the whole thing from scratch → [`build/`](build/)
+
+Don't just watch it — **rebuild it the way history did.** The [`build/`](build/)
+track is a day in the life of the people who first made each layer, structured
+as the **Builder pattern**: one product assembled step by step.
+
+```
+Day 1 · Ken Thompson  · Unix    1971   build_repl()        → the SHELL holds state
+Day 2 · Fernando Pérez · IPython 2001  build_history/magics → memory + % commands
+                                 2011  build_transport()   → kernel over ZeroMQ
+Day 3 · Jupyter team   · Jupyter 2014  build_protocol()    → signed JSON messages
+```
+
+```bash
+.venv/bin/python build/director.py   # the makers assemble the stack, in character
+.venv/bin/python build/check.py      # green-check gate — 7 layers must pass
+```
+
+It runs out of the box; blank out any `build_*` step and reimplement it until
+`check.py` goes green. See [`build/README.md`](build/README.md).
+
+---
+
 ## Setup
 
 Homebrew Python 3.14, no IPython/Jupyter system-wide — everything lives in a venv.
