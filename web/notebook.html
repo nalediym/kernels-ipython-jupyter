@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Build Your Own Jupyter — a notebook that's dead until you give it a kernel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#0b0f14; --bg2:#11171f; --panel:#141c26; --line:#25313f;
+    --fg:#e7eef5; --fg2:#9fb1c1; --fg3:#5f7488;
+    --mono:'JetBrains Mono',ui-monospace,monospace; --sans:'Space Grotesk',system-ui,sans-serif;
+    --dead:#ff6b7a; --live:#7ee0c2; --in:#8ab4ff; --out:#ffb86b;
+    --accent:var(--dead);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1100px 640px at 50% -10%,#14202c 0%,var(--bg) 60%) fixed;
+       color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;
+       min-height:100vh;padding:clamp(16px,3.5vw,40px)}
+  .wrap{max-width:920px;margin:0 auto}
+  header{margin-bottom:18px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--fg2);margin-bottom:10px}
+  h1{font-size:clamp(22px,4vw,34px);font-weight:700;letter-spacing:-.02em;line-height:1.1}
+  .lede{margin-top:10px;color:var(--fg2);font-size:15px;max-width:64ch;line-height:1.5}
+
+  /* status badge — the wow */
+  .status{display:flex;align-items:center;gap:14px;margin:22px 0;padding:14px 18px;
+          background:var(--panel);border:1px solid var(--line);border-radius:14px;
+          border-left:3px solid var(--accent);transition:border-color .5s ease}
+  .dot{width:12px;height:12px;border-radius:50%;background:var(--accent);
+       box-shadow:0 0 0 0 var(--accent);transition:background .5s ease}
+  .dot.live{animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(126,224,194,.5)}70%{box-shadow:0 0 0 10px rgba(126,224,194,0)}100%{box-shadow:0 0 0 0 rgba(126,224,194,0)}}
+  .status .txt{flex:1}
+  .status .head{font-weight:700;font-size:15px}
+  .status .sub{font-family:var(--mono);font-size:12px;color:var(--fg2);margin-top:3px}
+  .status .hint{font-family:var(--mono);font-size:11px;color:var(--fg3)}
+  .toolbar{display:flex;gap:10px;margin-bottom:16px}
+  .btn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--fg);background:var(--bg2);
+       border:1px solid var(--line);border-radius:9px;padding:9px 16px;cursor:pointer;transition:all .2s}
+  .btn:hover{border-color:var(--fg3)}
+  .btn.run-all{background:var(--live);color:#06231b;border-color:var(--live)}
+  .btn.run-all:disabled{opacity:.35;cursor:not-allowed}
+
+  /* cells */
+  .cell{display:grid;grid-template-columns:64px 1fr;gap:12px;margin-bottom:14px}
+  .gutter{font-family:var(--mono);font-size:12px;color:var(--in);text-align:right;padding-top:14px;user-select:none}
+  .cellbody{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .src{position:relative}
+  textarea{width:100%;background:transparent;border:0;color:var(--fg);font-family:var(--mono);
+           font-size:13.5px;line-height:1.55;padding:13px 50px 13px 16px;resize:vertical;min-height:44px;outline:none}
+  .runbtn{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+          background:var(--bg2);color:var(--fg);cursor:pointer;font-size:13px;transition:all .15s}
+  .runbtn:hover{background:var(--in);color:#04122e;border-color:var(--in)}
+  .output{border-top:1px solid var(--line);padding:12px 16px;font-family:var(--mono);font-size:13px;line-height:1.5;white-space:pre-wrap;display:none}
+  .output.show{display:block}
+  .output .outlabel{color:var(--out)}
+  .output .stdout{color:var(--fg)}
+  .output .err{color:var(--dead)}
+  .output .dead{color:var(--fg2)}
+  .output .dead b{color:var(--dead)}
+  .output .wire{color:var(--fg3);font-size:12px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+  .output .wire .k{color:var(--in)}
+
+  /* wire panel */
+  .wirepanel{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:18px 0}
+  .wirepanel h3{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg2);margin-bottom:10px}
+  .wirepanel pre{font-family:var(--mono);font-size:12px;color:var(--fg2);white-space:pre-wrap;line-height:1.5}
+  .wirepanel .k{color:var(--in)} .wirepanel .v{color:var(--out)} .wirepanel .d{color:var(--live)}
+
+  footer{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--fg2);line-height:1.9}
+  footer a{color:var(--live);text-decoration:none} footer a:hover{text-decoration:underline}
+  footer .row{display:flex;flex-wrap:wrap;gap:6px 18px}
+  code{font-family:var(--mono);background:var(--bg2);padding:1px 5px;border-radius:4px;font-size:.9em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">build your own jupyter · the front-end never runs your code</div>
+    <h1>A notebook that's dead until you give it a kernel.</h1>
+    <p class="lede">This page is <b>just HTML</b>. Hit Run now and nothing happens — it can't execute Python.
+      Then start the kernel (<code>python web/server.py</code>) and watch every cell come alive. The kernel
+      is the <code>StackBuilder</code> you wrote in <code>build/</code>. <b>You built the thing that brings this to life.</b></p>
+  </header>
+
+  <div class="status" id="status">
+    <div class="dot" id="dot"></div>
+    <div class="txt">
+      <div class="head" id="st-head">🔴 No kernel connected</div>
+      <div class="sub" id="st-sub">the front-end is alone — it can serialize your code, but it can't run it</div>
+    </div>
+    <div class="hint" id="st-hint">start: <code>python web/server.py</code></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn run-all" id="runall" disabled>▶ Run all</button>
+    <button class="btn" id="reset">↺ Reset cells</button>
+  </div>
+
+  <div id="cells"></div>
+
+  <div class="wirepanel">
+    <h3>on the wire — the last message the front-end sent</h3>
+    <pre id="wire">nothing sent yet. hit Run on a cell.</pre>
+  </div>
+
+  <footer>
+    <div class="row">
+      <span>🌰 the people who built this:</span>
+      <a href="https://en.wikipedia.org/wiki/Ken_Thompson" target="_blank" rel="noopener">Ken Thompson (Unix shell, 1971)</a>
+      <a href="https://en.wikipedia.org/wiki/Fernando_P%C3%A9rez_(software_developer)" target="_blank" rel="noopener">Fernando Pérez (IPython, 2001)</a>
+      <a href="https://jupyter.org/about" target="_blank" rel="noopener">Project Jupyter (2014)</a>
+    </div>
+    <div class="row">
+      <span>📖 go deeper:</span>
+      <a href="https://jupyter-client.readthedocs.io/en/stable/messaging.html" target="_blank" rel="noopener">Jupyter messaging spec</a>
+      <a href="https://ipython.readthedocs.io/en/stable/" target="_blank" rel="noopener">IPython docs</a>
+      <a href="https://kernel.org/" target="_blank" rel="noopener">kernel.org (the OTHER kernel)</a>
+      <a href="https://github.com/nalediym/kernels-ipython-jupyter" target="_blank" rel="noopener">this repo</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+const KERNEL = "http://localhost:8799";
+let connected = false;
+
+// Cells build on each other — each reuses state the previous one left behind.
+const SEED = [
+  "x = 6 * 7",
+  "x * 2                      # reuses x from the cell above",
+  "%who                       # a magic — just a function the kernel registered",
+  "%time sum(range(100_000))  # another magic",
+  "nums = [x, x*2, x*3]\nsum(nums)   # still remembers x",
+  "_ + 1                      # _ is the last result — the kernel cached it",
+];
+
+const cellsEl = document.getElementById("cells");
+function render(seed = SEED) {
+  cellsEl.innerHTML = "";
+  seed.forEach((code, i) => {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.innerHTML = `
+      <div class="gutter" id="g${i}">In [ ]</div>
+      <div class="cellbody">
+        <div class="src">
+          <textarea spellcheck="false" rows="${(code.match(/\n/g)||[]).length+1}">${code}</textarea>
+          <button class="runbtn" title="Run (Shift+Enter)">▶</button>
+        </div>
+        <div class="output" id="o${i}"></div>
+      </div>`;
+    const ta = cell.querySelector("textarea");
+    cell.querySelector(".runbtn").onclick = () => runCell(i, ta.value);
+    ta.addEventListener("keydown", e => {
+      if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); runCell(i, ta.value); }
+    });
+    cellsEl.appendChild(cell);
+  });
+}
+
+function setWire(html) { document.getElementById("wire").innerHTML = html; }
+
+async function runCell(i, code) {
+  const out = document.getElementById("o" + i);
+  const gut = document.getElementById("g" + i);
+  out.classList.add("show");
+
+  // the message this front-end WOULD send (Jupyter signs it & ships over ZeroMQ;
+  // we'd ship JSON over HTTP — same shape, simpler wire).
+  const msg =
+    `<span class="d">&lt;IDS|MSG&gt;</span> · HMAC · ` +
+    `{<span class="k">msg_type</span>:<span class="v">"execute_request"</span>} · ` +
+    `{<span class="k">code</span>:<span class="v">${JSON.stringify(code).slice(0,60)}</span>}`;
+  setWire(msg);
+
+  if (!connected) {
+    gut.textContent = "In [ ]";
+    out.innerHTML =
+      `<span class="dead">⚠ <b>no kernel connected.</b> I'm just HTML — I serialized your code into a message, ` +
+      `but there's no process to run it. That's the whole point: the front-end never executes anything.</span>` +
+      `<div class="wire">would have sent → ${msg}</div>`;
+    return;
+  }
+
+  try {
+    const r = await fetch(KERNEL + "/execute", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    const d = await r.json();
+    gut.textContent = `In [${d.execution_count}]`;
+    let html = "";
+    if (d.stdout) html += `<span class="stdout">${escapeHtml(d.stdout.replace(/\n$/,""))}</span>\n`;
+    if (d.error)  html += `<span class="err">${escapeHtml(d.error.replace(/\n$/,""))}</span>`;
+    else if (d.result != null) html += `<span class="outlabel">Out[${d.execution_count}]:</span> ${escapeHtml(d.result)}`;
+    out.innerHTML = html.trim() || `<span class="dead">(no output)</span>`;
+    setWire(msg + `\n<span class="d">←</span> reply: {<span class="k">status</span>:<span class="v">"ok"</span>, ` +
+                  `<span class="k">execution_count</span>:<span class="v">${d.execution_count}</span>}`);
+  } catch (e) {
+    out.innerHTML = `<span class="err">fetch failed: ${e}</span>`;
+  }
+}
+
+function escapeHtml(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+
+// poll for the kernel — flips the badge the moment server.py comes up
+async function poll() {
+  try {
+    const r = await fetch(KERNEL + "/health", { cache: "no-store" });
+    const d = await r.json();
+    if (!connected) flip(true, d);
+  } catch { if (connected) flip(false); }
+}
+function flip(up, info) {
+  connected = up;
+  document.documentElement.style.setProperty("--accent", up ? "var(--live)" : "var(--dead)");
+  document.getElementById("dot").classList.toggle("live", up);
+  document.getElementById("runall").disabled = !up;
+  document.getElementById("st-head").textContent = up ? "🟢 Kernel connected" : "🔴 No kernel connected";
+  document.getElementById("st-sub").textContent = up
+    ? `engine: ${info.engine} · Python ${info.python} — now the cells can actually run`
+    : "the front-end is alone — it can serialize your code, but it can't run it";
+  document.getElementById("st-hint").innerHTML = up ? "hit ▶ Run all" : "start: <code>python web/server.py</code>";
+}
+
+document.getElementById("runall").onclick = async () => {
+  const tas = [...document.querySelectorAll("textarea")];
+  for (let i = 0; i < tas.length; i++) await runCell(i, tas[i].value);
+};
+document.getElementById("reset").onclick = () => render();
+
+render();
+poll();
+setInterval(poll, 1500);
+</script>
+</body>
+</html>
